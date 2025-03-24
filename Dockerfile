@@ -3,7 +3,8 @@ FROM ubuntu:24.04
 # Set environment variables
 ENV DEBIAN_FRONTEND=noninteractive \
     PYTHON_VERSION=3.7.9 \
-    FIREFOX_VERSION=120.0
+    FIREFOX_VERSION=120.0 \
+    DISPLAY=:1
 
 # Update and install required packages
 RUN apt-get update && apt-get install -y \
@@ -12,7 +13,7 @@ RUN apt-get update && apt-get install -y \
     curl \
     git \
     openjdk-11-jdk \
-    xvfb \   # Install Xvfb but do NOT start it
+    xvfb \
     x11vnc \
     tigervnc-standalone-server \
     tigervnc-tools \
@@ -81,7 +82,7 @@ RUN useradd -m -s /bin/bash tommy && \
 # Expose ports for VNC and SSH
 EXPOSE 5901 22
 
-# Start VNC, but NOT Xvfb (since Jenkins will handle it)
+# Start SSHD and VNC but NOT Xvfb (Jenkins manages Xvfb)
 CMD bash -c "fluxbox & \
              x11vnc -display :1 -forever -loop -noxdamage -repeat -rfbport 5901 -shared & \
              /usr/sbin/sshd -D"
