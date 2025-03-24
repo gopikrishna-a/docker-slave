@@ -12,7 +12,11 @@ RUN apt-get update && apt-get install -y \
     curl \
     git \
     openjdk-11-jdk \
-    xvfb \
+    xvfb \   # Install Xvfb but do NOT start it
+    x11vnc \
+    tigervnc-standalone-server \
+    tigervnc-tools \
+    fluxbox \
     unzip \
     openssh-server \
     build-essential \
@@ -45,7 +49,8 @@ RUN ln -sf /usr/local/bin/python3.7 /usr/bin/python3 && \
 
 # Install pip and necessary Python packages
 RUN python3 -m ensurepip && \
-    python3 -m pip install --upgrade pip
+    python3 -m pip install --upgrade pip && \
+    pip3 install selenium==4.14.0 webdriver-manager
 
 # Install Geckodriver 0.33
 RUN wget -q https://github.com/mozilla/geckodriver/releases/download/v0.33.0/geckodriver-v0.33.0-linux64.tar.gz \
@@ -73,8 +78,10 @@ RUN useradd -m -s /bin/bash tommy && \
     echo 'tommy:tommy' | chpasswd && \
     usermod -aG sudo tommy
 
-# Expose SSH Port
-EXPOSE 22
+# Expose ports for VNC and SSH
+EXPOSE 5901 22
 
-# Start SSH and keep container running
-CMD ["/usr/sbin/sshd", "-D"]
+# Start VNC, but NOT Xvfb (since Jenkins will handle it)
+CMD bash -c "fluxbox & \
+             x11vnc -display :1 -forever -loop -noxdamage -repeat -rfbport 5901 -shared & \
+             /usr/sbin/sshd -D"
