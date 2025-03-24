@@ -2,7 +2,8 @@ FROM ubuntu:24.04
 
 # Set environment variables
 ENV DEBIAN_FRONTEND=noninteractive \
-    PYTHON_VERSION=3.7.9
+    PYTHON_VERSION=3.7.9 \
+    FIREFOX_VERSION=120.0
 
 # Update and install required packages
 RUN apt-get update && apt-get install -y \
@@ -12,7 +13,6 @@ RUN apt-get update && apt-get install -y \
     git \
     openjdk-11-jdk \
     xvfb \
-    firefox \
     unzip \
     openssh-server \
     build-essential \
@@ -26,6 +26,8 @@ RUN apt-get update && apt-get install -y \
     liblzma-dev \
     libnss3-dev \
     zlib1g-dev \
+    libgtk-3-0 \
+    libdbus-glib-1-2 \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Python 3.7.9 from source
@@ -52,6 +54,13 @@ RUN wget -q https://github.com/mozilla/geckodriver/releases/download/v0.33.0/gec
     && mv geckodriver /usr/local/bin/ \
     && chmod +x /usr/local/bin/geckodriver \
     && rm geckodriver-v0.33.0-linux64.tar.gz
+
+# Install Firefox 120 manually
+RUN wget -q https://ftp.mozilla.org/pub/firefox/releases/${FIREFOX_VERSION}/linux-x86_64/en-US/firefox-${FIREFOX_VERSION}.tar.bz2 && \
+    tar -xjf firefox-${FIREFOX_VERSION}.tar.bz2 && \
+    mv firefox /opt/firefox && \
+    ln -sf /opt/firefox/firefox /usr/local/bin/firefox && \
+    rm firefox-${FIREFOX_VERSION}.tar.bz2
 
 # Configure SSH
 RUN mkdir /var/run/sshd && \
