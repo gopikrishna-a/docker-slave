@@ -1,7 +1,8 @@
 FROM ubuntu:24.04
 
 # Set environment variables
-ENV DEBIAN_FRONTEND=noninteractive
+ENV DEBIAN_FRONTEND=noninteractive \
+    PYTHON_VERSION=3.7.9
 
 # Update and install required packages
 RUN apt-get update && apt-get install -y \
@@ -14,16 +15,36 @@ RUN apt-get update && apt-get install -y \
     firefox \
     unzip \
     openssh-server \
+    build-essential \
+    libssl-dev \
+    libffi-dev \
+    libsqlite3-dev \
+    libbz2-dev \
+    libncurses5-dev \
+    libgdbm-dev \
+    libreadline-dev \
+    liblzma-dev \
+    libnss3-dev \
+    zlib1g-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Python 3.7.9
-RUN apt-get update && apt-get install -y \
-    python3.7 \
-    python3.7-venv \
-    python3.7-dev \
-    && ln -sf /usr/bin/python3.7 /usr/bin/python3 \
-    && ln -sf /usr/bin/python3.7 /usr/bin/python \
-    && rm -rf /var/lib/apt/lists/*
+# Install Python 3.7.9 from source
+RUN wget https://www.python.org/ftp/python/${PYTHON_VERSION}/Python-${PYTHON_VERSION}.tgz && \
+    tar xvf Python-${PYTHON_VERSION}.tgz && \
+    cd Python-${PYTHON_VERSION} && \
+    ./configure --enable-optimizations && \
+    make -j$(nproc) && \
+    make altinstall && \
+    cd .. && rm -rf Python-${PYTHON_VERSION} Python-${PYTHON_VERSION}.tgz
+
+# Set Python 3.7 as default
+RUN ln -sf /usr/local/bin/python3.7 /usr/bin/python3 && \
+    ln -sf /usr/local/bin/python3.7 /usr/bin/python
+
+# Install pip and necessary Python packages
+RUN python3 -m ensurepip && \
+    python3 -m pip install --upgrade pip && \
+    pip3 install selenium==4.14.0 webdriver-manager
 
 # Install Geckodriver 0.33
 RUN wget -q https://github.com/mozilla/geckodriver/releases/download/v0.33.0/geckodriver-v0.33.0-linux64.tar.gz \
@@ -31,10 +52,6 @@ RUN wget -q https://github.com/mozilla/geckodriver/releases/download/v0.33.0/gec
     && mv geckodriver /usr/local/bin/ \
     && chmod +x /usr/local/bin/geckodriver \
     && rm geckodriver-v0.33.0-linux64.tar.gz
-
-# Install Selenium
-RUN python3 -m pip install --upgrade pip && \
-    pip3 install selenium==4.14.0 webdriver-manager
 
 # Configure SSH
 RUN mkdir /var/run/sshd && \
