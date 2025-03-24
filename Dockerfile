@@ -50,8 +50,7 @@ RUN ln -sf /usr/local/bin/python3.7 /usr/bin/python3 && \
 
 # Install pip and necessary Python packages
 RUN python3 -m ensurepip && \
-    python3 -m pip install --upgrade pip && \
-    pip3 install selenium==4.14.0 webdriver-manager
+    python3 -m pip install --upgrade pip 
 
 # Install Geckodriver 0.33
 RUN wget -q https://github.com/mozilla/geckodriver/releases/download/v0.33.0/geckodriver-v0.33.0-linux64.tar.gz \
